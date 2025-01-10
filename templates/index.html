@@ -1,56 +1,379 @@
-<!DOCTYPE html>
+
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with LangFlow</title>
+    <title>NAR - AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #89f7fe, #66a6ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+
+        .chat-container {
+            width: 450px;
+            height: 700px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateX(0); }
+            50% { transform: translateY(-20px) rotateX(5deg); }
+        }
+
+        .chat-container:hover {
+            transform: scale(1.02) rotateY(2deg);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .chat-header h2 {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        #chatContainer {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.95);
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            animation: fadeIn 0.4s ease-in;
+            transition: transform 0.3s ease;
+        }
+
+        .message:hover {
+            transform: scale(1.02);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .bot-message {
+            background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+            padding: 18px;
+            border-radius: 18px;
+            max-width: 75%;
+            margin: 12px 0;
+            position: relative;
+            transform-origin: left bottom;
+        }
+
+        .bot-message::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 15px;
+            border-style: solid;
+            border-width: 10px 10px 0;
+            border-color: #b2ebf2 transparent;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #bbdefb, #90caf9);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+            padding: 18px;
+            border-radius: 18px;
+            max-width: 75%;
+            margin: 12px 0;
+            text-align: right;
+            position: relative;
+            transform-origin: right bottom;
+        }
+
+        .user-message::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 15px;
+            border-style: solid;
+            border-width: 10px 10px 0;
+            border-color: #90caf9 transparent;
+        }
+
+        .input-area {
+            padding: 25px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            gap: 15px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe, #4facfe);
+            animation: slide 2s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e3f2fd;
+            border-radius: 15px;
+            outline: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.9);
+        }
+
+        #messageInput:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
+            transform: translateY(-2px);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+        }
+
+        .error-message {
+            color: #ef5350;
+            background: #ffebee;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 12px 0;
+            box-shadow: 0 2px 6px rgba(239, 83, 80, 0.1);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>NAR AI Assistant</h2>
+        </div>
+        <div id="chatContainer">
+            <div class="bot-message">Hi! I'm NAR, your friendly AI assistant. How can I help you today? 😊</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Type your message to NAR..." autocomplete="off">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
     <script>
-        function sendMessage() {
+        let isTyping = false;
+
+        async function sendMessage() {
+            if (isTyping) return;
+            
             const message = document.getElementById("messageInput").value;
             const chatContainer = document.getElementById("chatContainer");
-    
-            // Append user message to chat
-            const userMessage = document.createElement("p");
-            userMessage.textContent = "You: " + message;
+            
+            if (message.trim() === '') return;
+
+            // Append user message with typing animation
+            const userMessage = document.createElement("div");
+            userMessage.className = "user-message";
+            userMessage.textContent = message;
             chatContainer.appendChild(userMessage);
-    
-            // Send message to Flask API
-            fetch('/send_message', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const botMessage = document.createElement("p");
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Clear input and show typing indicator
+            document.getElementById("messageInput").value = "";
+            isTyping = true;
+            
+            const typingIndicator = document.createElement("div");
+            typingIndicator.className = "bot-message";
+            typingIndicator.textContent = "NAR is typing...";
+            chatContainer.appendChild(typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                chatContainer.removeChild(typingIndicator);
+                
+                const botMessage = document.createElement("div");
                 if (data.bot_message) {
-                    botMessage.textContent = "Bot: " + data.bot_message;
+                    botMessage.className = "bot-message";
+                    await typewriterEffect(botMessage, data.bot_message);
                 } else if (data.error) {
+                    botMessage.className = "error-message";
                     botMessage.textContent = "Error: " + JSON.stringify(data.error);
                 } else {
+                    botMessage.className = "error-message";
                     botMessage.textContent = "Error: No response from server.";
                 }
                 chatContainer.appendChild(botMessage);
-            })
-            .catch(error => {
-                const errorMessage = document.createElement("p");
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } catch (error) {
+                chatContainer.removeChild(typingIndicator);
+                const errorMessage = document.createElement("div");
+                errorMessage.className = "error-message";
                 errorMessage.textContent = "Error: " + error.message;
                 chatContainer.appendChild(errorMessage);
-            });
-    
-            document.getElementById("messageInput").value = "";  // Clear the input field
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            isTyping = false;
         }
+
+        async function typewriterEffect(element, text) {
+            chatContainer.appendChild(element);
+            for (let i = 0; i < text.length; i++) {
+                element.textContent = text.substring(0, i + 1);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+        }
+
+        // Allow sending message with Enter key
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !isTyping) {
+                sendMessage();
+            }
+        });
+
+        // Add input focus animation
+        document.getElementById('messageInput').addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+        });
+
+        document.getElementById('messageInput').addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
     </script>
-    
-</head>
-<body>
-    <h1>Chat with LangFlow</h1>
-
-    <div id="chatContainer" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
-        <!-- Chat messages will be appended here -->
-    </div>
-
-    <input type="text" id="messageInput" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
 </body>
 </html>
